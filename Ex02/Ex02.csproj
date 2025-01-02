@@ -32,14 +32,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ConsoleGameManager.cs" />
-    <Compile Include="GameSession.cs" />
-    <Compile Include="GameSetup.cs" />
-    <Compile Include="GameBoard.cs" />
-    <Compile Include="GameMenu.cs" />
-    <Compile Include="Coin.cs" />
-    <Compile Include="Player.cs" />
+    <Compile Include="UI\ConsoleGame.cs" />
+    <Compile Include="Enums\eBoardStyle.cs" />
+    <Compile Include="Enums\eLogic.cs" />
+    <Compile Include="Logical\GameSession.cs" />
+    <Compile Include="Logical\GameManager.cs" />
+    <Compile Include="Logical\GameBoard.cs" />
+    <Compile Include="Logical\GameMenu.cs" />
+    <Compile Include="Logical\Coin.cs" />
+    <Compile Include="Logical\Move.cs" />
+    <Compile Include="Logical\Player.cs" />
+    <Compile Include="Logical\PointOnBoard.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

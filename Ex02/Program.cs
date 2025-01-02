@@ -6,12 +6,13 @@ namespace Ex02
     {
         public static void Main()
         {
-            damkaGame();
+            playDamkaGame();
         }
 
-        private static void damkaGame()
+        private static void playDamkaGame()
         {
-
+            ConsoleGame damkaGame = new ConsoleGame();
+            damkaGame.StartGame();
         }
     }
 }
