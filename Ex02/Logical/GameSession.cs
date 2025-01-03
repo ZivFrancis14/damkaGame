@@ -10,8 +10,9 @@ namespace Ex02
         private Player m_Player1;
         private Player m_Player2;
         private Player m_CurrentPlayer;
+        private Move m_CurrentMove;
         private GameBoard m_GameBoard;
-        private List<Move> possibleMoves = new List<Move>();
+        private List<Move> m_PossibleMoves = new List<Move>();
         private PointOnBoard? m_TheCurrentCoinForDoubleJump = null;
 
         public GameSession(Player i_Player1, Player i_Player2, GameBoard i_GameBoard)
@@ -21,50 +22,78 @@ namespace Ex02
             m_GameBoard = i_GameBoard;
             m_CurrentPlayer = m_Player1;
         }
+        public Move CurrentMove
+        {
+            get
+            {
+                return m_CurrentMove;
+            }
+        }
+        public PointOnBoard? CurrentCoinForDoubleJump
+        {
+            get
+            {
+                return m_TheCurrentCoinForDoubleJump;
+            }
+        }
+        public Player Player1
+        {
+            get
+            {
+                return m_Player1;
+            }
+        }
+        public Player Player2
+        {
+            get
+            {
+                return m_Player2;
+            }
+        }
         public Coin[,] GetGameBoardMatrix()
         {
             return m_GameBoard.getBoard();
         }
-
         public Player GetCurrentPlayer()
         {
             return m_CurrentPlayer;
         }
-
-        public void Turn(Move i_UsersMove, out bool isMoveValid)
+        public void Turn(Move i_UsersMove, out bool o_IsMoveValid)
         {
-            isMoveValid = false;
+            bool moveIsCapture = false;
+            o_IsMoveValid = false;
+
             if (m_TheCurrentCoinForDoubleJump != null)
             {
-                if (ValidateDoubleTurn(i_UsersMove))
+                if (validateDoubleTurn(i_UsersMove))
                 {
                     performMove(i_UsersMove);
-                    isMoveValid = true;
+                    o_IsMoveValid = true;
                 }
             }
             else
             {
-                if (ValidateMove(i_UsersMove))
+                if (validateMove(i_UsersMove, out moveIsCapture))
                 {
+                    i_UsersMove.IsCapture = moveIsCapture;
                     performMove(i_UsersMove);
-                    isMoveValid = true;
+                    o_IsMoveValid = true;
                 }
             }
         }
-
-        private bool ValidateMove(Move i_UsersMove)
+        private bool validateMove(Move i_UsersMove, out bool o_MoveIsCapture)
         {
             bool moveIsPossible = false;
-            bool hasPotentialCaptureMove = false;
-            bool userMoveIsCapture = false;
+            bool hasPotentialCaptureMove = false;            
             bool moveIsValid = false;
+            o_MoveIsCapture = false;
             UpdatePossibleMoves();
-            foreach (Move move in possibleMoves)
+
+            foreach (Move move in m_PossibleMoves)
             {
                 if (move.CheckIfTheMoveWasCaptureMove())
                 {
                     hasPotentialCaptureMove = true;
-                    Console.WriteLine("{0},{1}", move.Start.Row, move.Start.Col, move.End.Row, move.End.Col);//check
                 }
 
                 if (move.Start.Equals(i_UsersMove.Start) && move.End.Equals(i_UsersMove.End))
@@ -72,20 +101,19 @@ namespace Ex02
                     moveIsPossible = true;
                     if(move.CheckIfTheMoveWasCaptureMove())
                     {
-                        userMoveIsCapture = true;
+                        o_MoveIsCapture = true;
                     }
                 }
             }
-            if ((hasPotentialCaptureMove == userMoveIsCapture) && moveIsPossible)
+            if ((hasPotentialCaptureMove == o_MoveIsCapture) && moveIsPossible)
             {
                 moveIsValid = true;
+                m_CurrentMove = i_UsersMove;
             }
-
 
             return moveIsValid;
         }
-
-        private bool ValidateDoubleTurn(Move i_UsersMove)
+        private bool validateDoubleTurn(Move i_UsersMove)
         {
             if (m_TheCurrentCoinForDoubleJump != null && i_UsersMove.Start.Equals(m_TheCurrentCoinForDoubleJump))
             {
@@ -105,39 +133,35 @@ namespace Ex02
         }
         private void performMove(Move i_UsersMove)
         {
-            
             // Handle capture logic if it's a capture move
             if (i_UsersMove.CheckIfTheMoveWasCaptureMove())
-            {
-                
-                if (HasAnotherCapture(i_UsersMove.End))
+            {              
+                if (hasAnotherCapture(i_UsersMove.End))
                 {
                     m_TheCurrentCoinForDoubleJump = i_UsersMove.End;
                 }
                 else
                 {
                     m_TheCurrentCoinForDoubleJump = null;
-                    SwitchPlayer();
+                    switchPlayer();
                 }
             }
             else
             {
                 // Regular move, no capture
                 m_TheCurrentCoinForDoubleJump = null;
-                SwitchPlayer();
+                switchPlayer();
             }
             // Update the board with the new move
             m_GameBoard.UpdateBoard(i_UsersMove);
 
             // Check if the coin became a king after the move
-            CheckIfCoinBecameKing(i_UsersMove.End);
+            checkIfCoinBecameKing(i_UsersMove.End);
         }
-
-
-        private void CheckIfCoinBecameKing(PointOnBoard coinPosition)
+        private void checkIfCoinBecameKing(PointOnBoard i_CoinPosition)
         {
-            int row = (int)coinPosition.Row;
-            Coin coin = m_GameBoard.getBoard()[row, (int)coinPosition.Col];
+            int row = (int)i_CoinPosition.Row;
+            Coin coin = m_GameBoard.getBoard()[row, (int)i_CoinPosition.Col];
 
             if (coin != null)
             {
@@ -157,32 +181,31 @@ namespace Ex02
                 }
             }
         }
-
-
-        private bool HasAnotherCapture(PointOnBoard coinPosition)
+        private bool hasAnotherCapture(PointOnBoard i_CoinPosition)
         {
-            List<Move> additionalMoves = m_GameBoard.GetPossibleMovesForCoin(coinPosition);
+            bool coinHasAnotherCapture = false;
+
+            List<Move> additionalMoves = m_GameBoard.GetPossibleMovesForCoin(i_CoinPosition);
 
             foreach (Move move in additionalMoves)
             {
                 if (move.CheckIfTheMoveWasCaptureMove())
                 {
-                    return true;
+                    coinHasAnotherCapture = true;
+                    break;
                 }
             }
 
-            return false;
+            return coinHasAnotherCapture;
         }
-
-        private void SwitchPlayer()
+        private void switchPlayer()
         {
             m_CurrentPlayer = (m_CurrentPlayer == m_Player1) ? m_Player2 : m_Player1;
         }
-
         public eGameState GameStatus()
         {
-            List<Move> opponentPossibleMoves = GetOpponentPossibleMoves();
-            int opponentPiecesCount = GetOpponentPiecesCount();
+            List<Move> opponentPossibleMoves = getOpponentPossibleMoves();
+            int opponentPiecesCount = getOpponentPiecesCount();
 
             if (m_TheCurrentCoinForDoubleJump != null)
             {
@@ -194,15 +217,14 @@ namespace Ex02
                 return eGameState.Win;
             }
 
-            if (possibleMoves.Count == 0)
+            if (m_PossibleMoves.Count == 0)
             {
                 return eGameState.Draw;
             }
 
             return eGameState.Next;
         }
-
-        private List<Move> GetOpponentPossibleMoves()
+        private List<Move> getOpponentPossibleMoves()
         {
             List<Move> opponentPossibleMoves = new List<Move>();
 
@@ -221,8 +243,7 @@ namespace Ex02
 
             return opponentPossibleMoves;
         }
-
-        private int GetOpponentPiecesCount()
+        private int getOpponentPiecesCount()
         {
             int opponentPiecesCount = 0;
 
@@ -236,10 +257,9 @@ namespace Ex02
 
             return opponentPiecesCount;
         }
-
         public void UpdatePossibleMoves()
         {
-            possibleMoves.Clear();
+            m_PossibleMoves.Clear();
 
             for (int row = 0; row < m_GameBoard.getBoard().GetLength(0); row++)
             {
@@ -249,20 +269,7 @@ namespace Ex02
                     if (coin != null && coin.m_Symbol == m_CurrentPlayer.Symbol)
                     {
                         List<Move> coinMoves = m_GameBoard.GetPossibleMovesForCoin(new PointOnBoard((eRow)row, (eCol)col));
-
-                        foreach (Move move in coinMoves)
-                        {
-                            if (move.CheckIfTheMoveWasCaptureMove())
-                            {
-                                int capturedRow = ((int)move.Start.Row + (int)move.End.Row) / 2;
-                                int capturedCol = ((int)move.Start.Col + (int)move.End.Col) / 2;
-
-                                //כאן זה מוחק את המטבע שאנחנו רוצים לאכול ואז האוכל השני לא מזהה שהוא קיים
-                                m_GameBoard.getBoard()[capturedRow, capturedCol] = null;
-                            }
-                        }
-
-                        possibleMoves.AddRange(coinMoves);
+                        m_PossibleMoves.AddRange(coinMoves);
                     }
                 }
             }

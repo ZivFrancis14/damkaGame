@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
+using Ex02.ConsoleUtils;
 
 namespace Ex02
 {
@@ -18,9 +16,9 @@ namespace Ex02
             int sizeBoard = 0;
             bool isPlayAgainstHuman = false;
             eGameState gameState = eGameState.Next;
-            Move playerMove = new Move();
             bool isFirstRound = true;
 
+            Move playerMove = new Move();
             namePlayer1 = nameInputFromUser();
             sizeBoard = getSizeBoardFromUser();
             if (playAgainstHuman() == true)
@@ -41,10 +39,11 @@ namespace Ex02
                 while (gameState == eGameState.Next)//single game run - as long there is't winners/equal/retirement
                 {                   
                     printBoard(damkaGame.Session);
-                    printTheLastMoveTaken(isFirstRound, damkaGame.Session.GetCurrentPlayer(), playerMove);
+                    printTheLastMoveTaken(isFirstRound, damkaGame.Session);
                     printPlayerTurn(damkaGame.Session.GetCurrentPlayer());
                     gameState = singlePlayTurn(damkaGame.Session, playerMove, sizeBoard);                  
                     isFirstRound = false;
+                    //Screen.Clear();
                 }
 
                 if (isUserWantAnotherRound() == false)
@@ -178,18 +177,6 @@ namespace Ex02
 
             return isValid;
         }
-        //private Move getAndCheckStepValidation(GameSession i_Session, int i_SizeBoard)
-        //{
-        //    Move playerMove = new Move();
-        //    playerMove = stepTurnInput(i_SizeBoard);
-
-        //    while (i_Session.IsValidMove(playerMove) == false)
-        //    {
-        //        playerMove = stepTurnInput(i_SizeBoard);
-        //    }
-
-        //    return playerMove;
-        //}
         private Move stepTurnInput(int i_sizeBoard)
         {
             bool inputIsValid = false;
@@ -259,7 +246,7 @@ namespace Ex02
                     break;
                 default:
                     break;
-            }  
+            }   
             
             return currentStateAfterMove;
         }
@@ -376,15 +363,42 @@ namespace Ex02
         }
         private void printPlayerTurn(Player i_Player)
         {
-            Console.WriteLine("{0}'s Turn ({1}) :", i_Player.Name, (char)i_Player.Symbol);
+            string msg = string.Format("{0}'s Turn ({1}) :", i_Player.Name, (char)i_Player.Symbol);
+            Console.WriteLine(msg);
         }
-        private void printTheLastMoveTaken(bool i_IsFirstRound, Player i_Player, Move i_lastMove)
+        private void printTheLastMoveTaken(bool i_IsFirstRound, GameSession i_Session)
         {
             if (i_IsFirstRound == false)
             {
-                Console.WriteLine("{0}'s move was ({1}) : {2}>{3}", i_Player.Name, (char)i_Player.Symbol, i_lastMove.Start, i_lastMove.End);
+                Move lastMove = getLastMoveWasTaken(i_Session);
+                Player lastPlayer = getLastPlayer(i_Session);
+
+                string startPoint = string.Format("{0}{1}", lastMove.Start.Row, lastMove.Start.Col);
+                string endPoint = string.Format("{0}{1}", lastMove.End.Row, lastMove.End.Col);
+                string msg = string.Format("{0}'s move was ({1}) : {2}>{3}", lastPlayer.Name, (char)lastPlayer.Symbol, startPoint, endPoint);
+                Console.WriteLine(msg);
+            }           
+        }
+        private Move getLastMoveWasTaken(GameSession i_Session)
+        {
+            return i_Session.CurrentMove;
+        }
+        private Player getLastPlayer(GameSession i_Session)
+        {
+            if (i_Session.CurrentCoinForDoubleJump != null)
+            {
+                return i_Session.GetCurrentPlayer();
+            }
+            else
+            {
+                Player currentPlayer = i_Session.GetCurrentPlayer();
+                Player player1 = i_Session.Player1;
+                Player player2 = i_Session.Player2;
+
+                return currentPlayer == player1 ? player2 : player1;
             }
         }
+
         private void printGeneralGameSummery()
         {
 

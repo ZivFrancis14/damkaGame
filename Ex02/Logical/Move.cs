@@ -28,6 +28,13 @@
                 return m_End; 
             }
         }
+        public bool IsCapture
+        {
+            set
+            {
+                m_IsCapture = value;
+            }
+        }
 
         public bool CheckIfTheMoveWasCaptureMove()
         {
