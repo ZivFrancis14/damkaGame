@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Ex02
 {
@@ -22,71 +20,55 @@ namespace Ex02
             m_GameBoard = i_GameBoard;
             m_CurrentPlayer = m_Player1;
         }
-        public Move CurrentMove
-        {
-            get
-            {
-                return m_CurrentMove;
-            }
-        }
-        public PointOnBoard? CurrentCoinForDoubleJump
-        {
-            get
-            {
-                return m_TheCurrentCoinForDoubleJump;
-            }
-        }
-        public Player Player1
-        {
-            get
-            {
-                return m_Player1;
-            }
-        }
-        public Player Player2
-        {
-            get
-            {
-                return m_Player2;
-            }
-        }
-        public Coin[,] GetGameBoardMatrix()
-        {
-            return m_GameBoard.getBoard();
-        }
-        public Player GetCurrentPlayer()
-        {
-            return m_CurrentPlayer;
-        }
+
+        public Move CurrentMove => m_CurrentMove;
+
+        public PointOnBoard? CurrentCoinForDoubleJump => m_TheCurrentCoinForDoubleJump;
+
+        public Player Player1 => m_Player1;
+
+        public Player Player2 => m_Player2;
+
+        public Coin[,] GetGameBoardMatrix() => m_GameBoard.GetBoard();
+
+        public Player GetCurrentPlayer() => m_CurrentPlayer;
+
         public void Turn(Move i_UsersMove, out bool o_IsMoveValid)
         {
-            bool moveIsCapture = false;
             o_IsMoveValid = false;
+            bool moveIsCapture = false;
+
+            //if (m_CurrentPlayer.IsHuman == false)
+            //{                
+            //    i_UsersMove = CalculateComputerMove();
+            //}
 
             if (m_TheCurrentCoinForDoubleJump != null)
             {
-                if (validateDoubleTurn(i_UsersMove))
+                if (ValidateDoubleTurn(i_UsersMove))
                 {
-                    performMove(i_UsersMove);
+                    PerformMove(i_UsersMove);
                     o_IsMoveValid = true;
                 }
             }
-            else
+            else if (ValidateMove(i_UsersMove, out moveIsCapture))
             {
-                if (validateMove(i_UsersMove, out moveIsCapture))
-                {
-                    i_UsersMove.IsCapture = moveIsCapture;
-                    performMove(i_UsersMove);
-                    o_IsMoveValid = true;
-                }
+                i_UsersMove.IsCapture = moveIsCapture;
+                PerformMove(i_UsersMove);
+                o_IsMoveValid = true;
             }
         }
-        private bool validateMove(Move i_UsersMove, out bool o_MoveIsCapture)
+
+        private bool ValidateMove(Move i_UsersMove, out bool o_MoveIsCapture)
         {
-            bool moveIsPossible = false;
-            bool hasPotentialCaptureMove = false;            
-            bool moveIsValid = false;
             o_MoveIsCapture = false;
+            bool moveIsPossible = false;
+            bool hasPotentialCaptureMove = false;
+            bool moveIsValid = false;
+            //if ((m_CurrentPlayer.IsHuman == false))
+            //{
+            //    moveIsValid = true;
+            //}
             UpdatePossibleMoves();
 
             foreach (Move move in m_PossibleMoves)
@@ -97,144 +79,152 @@ namespace Ex02
                 }
 
                 if (move.Start.Equals(i_UsersMove.Start) && move.End.Equals(i_UsersMove.End))
-                { 
+                {
                     moveIsPossible = true;
-                    if(move.CheckIfTheMoveWasCaptureMove())
+                    if (move.CheckIfTheMoveWasCaptureMove())
                     {
                         o_MoveIsCapture = true;
                     }
                 }
             }
+
             if ((hasPotentialCaptureMove == o_MoveIsCapture) && moveIsPossible)
             {
                 moveIsValid = true;
                 m_CurrentMove = i_UsersMove;
             }
 
+
+
             return moveIsValid;
         }
-        private bool validateDoubleTurn(Move i_UsersMove)
+
+        private bool ValidateDoubleTurn(Move i_UsersMove)
         {
+            bool isValid = false;
+            //if (m_CurrentPlayer.IsHuman == false) 
+            //{
+            //    isValid = true;
+                
+            //}
             if (m_TheCurrentCoinForDoubleJump != null && i_UsersMove.Start.Equals(m_TheCurrentCoinForDoubleJump))
             {
                 List<Move> movesForCoin = m_GameBoard.GetPossibleMovesForCoin(m_TheCurrentCoinForDoubleJump.Value);
+
                 foreach (Move move in movesForCoin)
                 {
                     if (move.Start.Equals(i_UsersMove.Start) &&
                         move.End.Equals(i_UsersMove.End) &&
                         move.CheckIfTheMoveWasCaptureMove())
                     {
-                        return true;
+                        isValid = true;
+                        break;
                     }
                 }
             }
 
-            return false;
+            return isValid;
         }
-        private void performMove(Move i_UsersMove)
+
+        private void PerformMove(Move i_UsersMove)
         {
-            // Handle capture logic if it's a capture move
+            m_GameBoard.UpdateBoard(i_UsersMove);
+
             if (i_UsersMove.CheckIfTheMoveWasCaptureMove())
-            {              
-                if (hasAnotherCapture(i_UsersMove.End))
+            {
+                if (HasAnotherCapture(i_UsersMove.End))
                 {
                     m_TheCurrentCoinForDoubleJump = i_UsersMove.End;
                 }
                 else
                 {
                     m_TheCurrentCoinForDoubleJump = null;
-                    switchPlayer();
                 }
             }
             else
             {
-                // Regular move, no capture
                 m_TheCurrentCoinForDoubleJump = null;
-                switchPlayer();
             }
-            // Update the board with the new move
-            m_GameBoard.UpdateBoard(i_UsersMove);
 
-            // Check if the coin became a king after the move
-            checkIfCoinBecameKing(i_UsersMove.End);
+            CheckIfCoinBecameKing(i_UsersMove.End);
+
+            if (m_TheCurrentCoinForDoubleJump == null && GameStatus() == eGameState.Next)
+            {
+                SwitchPlayer();
+            }
         }
-        private void checkIfCoinBecameKing(PointOnBoard i_CoinPosition)
+
+        private void CheckIfCoinBecameKing(PointOnBoard i_CoinPosition)
         {
             int row = (int)i_CoinPosition.Row;
-            Coin coin = m_GameBoard.getBoard()[row, (int)i_CoinPosition.Col];
+            Coin coin = m_GameBoard.GetBoard()[row, (int)i_CoinPosition.Col];
 
             if (coin != null)
             {
-                // Check if the coin reaches the last row for Player 1 or Player 2
-                if ((coin.m_Symbol == m_Player1.Symbol && row == m_GameBoard.getBoard().GetLength(0) - 1) ||
-                    (coin.m_Symbol == m_Player2.Symbol && row == 0))
+                bool isPlayer1King = IsSamePlayerSymbol(coin.m_Symbol, eSymbol.Player1) && row == m_GameBoard.GetBoard().GetLength(0) - 1;
+                bool isPlayer2King = IsSamePlayerSymbol(coin.m_Symbol, eSymbol.Player2) && row == 0;
+
+                if (isPlayer1King || isPlayer2King)
                 {
                     coin.MakeKing();
-                    if(coin.GetSymbol() == (char)eSymbol.Player1)
-                    {
-                        coin.SetSymbol(eSymbol.KingPlayer1);
-                    }
-                    else
-                    { 
-                        coin.SetSymbol(eSymbol.KingPlayer2);
-                    }                  
+                    coin.SetSymbol(isPlayer1King ? eSymbol.KingPlayer1 : eSymbol.KingPlayer2);
                 }
             }
         }
-        private bool hasAnotherCapture(PointOnBoard i_CoinPosition)
-        {
-            bool coinHasAnotherCapture = false;
 
+        private bool HasAnotherCapture(PointOnBoard i_CoinPosition)
+        {
+            bool hasCapture = false;
             List<Move> additionalMoves = m_GameBoard.GetPossibleMovesForCoin(i_CoinPosition);
 
             foreach (Move move in additionalMoves)
             {
                 if (move.CheckIfTheMoveWasCaptureMove())
                 {
-                    coinHasAnotherCapture = true;
+                    hasCapture = true;
                     break;
                 }
             }
 
-            return coinHasAnotherCapture;
+            return hasCapture;
         }
-        private void switchPlayer()
+
+        private void SwitchPlayer()
         {
             m_CurrentPlayer = (m_CurrentPlayer == m_Player1) ? m_Player2 : m_Player1;
         }
+
         public eGameState GameStatus()
         {
-            List<Move> opponentPossibleMoves = getOpponentPossibleMoves();
-            int opponentPiecesCount = getOpponentPiecesCount();
+            eGameState gameState = eGameState.Next;
 
-            if (m_TheCurrentCoinForDoubleJump != null)
+            if (m_PossibleMoves.Count == 0 || GetPiecesCountForPlayer(m_CurrentPlayer) == 0)
             {
-                return eGameState.AnotherTurn;
+                gameState = eGameState.Win;
+            }
+            else if (GetOpponentPossibleMoves().Count == 0 || GetPiecesCountForPlayer(GetOpponentPlayer()) == 0)
+            {
+                gameState = eGameState.Win;
+            }
+            else if (m_TheCurrentCoinForDoubleJump != null)
+            {
+                gameState = eGameState.AnotherTurn;
             }
 
-            if (opponentPossibleMoves.Count == 0 || opponentPiecesCount == 0)
-            {
-                return eGameState.Win;
-            }
-
-            if (m_PossibleMoves.Count == 0)
-            {
-                return eGameState.Draw;
-            }
-
-            return eGameState.Next;
+            return gameState;
         }
-        private List<Move> getOpponentPossibleMoves()
+
+        private List<Move> GetOpponentPossibleMoves()
         {
             List<Move> opponentPossibleMoves = new List<Move>();
 
-            for (int row = 0; row < m_GameBoard.getBoard().GetLength(0); row++)
+            for (int row = 0; row < m_GameBoard.GetBoard().GetLength(0); row++)
             {
-                for (int col = 0; col < m_GameBoard.getBoard().GetLength(1); col++)
+                for (int col = 0; col < m_GameBoard.GetBoard().GetLength(1); col++)
                 {
-                    Coin coin = m_GameBoard.getBoard()[row, col];
+                    Coin coin = m_GameBoard.GetBoard()[row, col];
 
-                    if (coin != null && coin.m_Symbol != m_CurrentPlayer.Symbol)
+                    if (coin != null && !IsSamePlayerSymbol(coin.m_Symbol, m_CurrentPlayer.Symbol))
                     {
                         opponentPossibleMoves.AddRange(m_GameBoard.GetPossibleMovesForCoin(new PointOnBoard((eRow)row, (eCol)col)));
                     }
@@ -243,36 +233,116 @@ namespace Ex02
 
             return opponentPossibleMoves;
         }
-        private int getOpponentPiecesCount()
-        {
-            int opponentPiecesCount = 0;
 
-            foreach (Coin coin in m_GameBoard.getBoard())
+        private int GetPiecesCountForPlayer(Player player)
+        {
+            int piecesCount = 0;
+
+            foreach (Coin coin in m_GameBoard.GetBoard())
             {
-                if (coin != null && coin.m_Symbol != m_CurrentPlayer.Symbol)
+                if (coin != null && IsSamePlayerSymbol(coin.m_Symbol, player.Symbol))
                 {
-                    opponentPiecesCount++;
+                    piecesCount++;
                 }
             }
 
-            return opponentPiecesCount;
+            return piecesCount;
         }
+
         public void UpdatePossibleMoves()
         {
             m_PossibleMoves.Clear();
 
-            for (int row = 0; row < m_GameBoard.getBoard().GetLength(0); row++)
+            for (int row = 0; row < m_GameBoard.GetBoard().GetLength(0); row++)
             {
-                for (int col = 0; col < m_GameBoard.getBoard().GetLength(1); col++)
+                for (int col = 0; col < m_GameBoard.GetBoard().GetLength(1); col++)
                 {
-                    Coin coin = m_GameBoard.getBoard()[row, col];
-                    if (coin != null && coin.m_Symbol == m_CurrentPlayer.Symbol)
+                    Coin coin = m_GameBoard.GetBoard()[row, col];
+
+                    if (coin != null && IsSamePlayerSymbol(coin.m_Symbol, m_CurrentPlayer.Symbol))
                     {
-                        List<Move> coinMoves = m_GameBoard.GetPossibleMovesForCoin(new PointOnBoard((eRow)row, (eCol)col));
-                        m_PossibleMoves.AddRange(coinMoves);
+                        m_PossibleMoves.AddRange(m_GameBoard.GetPossibleMovesForCoin(new PointOnBoard((eRow)row, (eCol)col)));
                     }
                 }
             }
         }
+
+        private bool IsSamePlayerSymbol(eSymbol i_Symbol1, eSymbol symbol2)
+        {
+            bool isSameSymbol = false;
+
+            if ((i_Symbol1 == eSymbol.Player1 || i_Symbol1 == eSymbol.KingPlayer1) &&
+                (symbol2 == eSymbol.Player1 || symbol2 == eSymbol.KingPlayer1))
+            {
+                isSameSymbol = true;
+            }
+            else if ((i_Symbol1 == eSymbol.Player2 || i_Symbol1 == eSymbol.KingPlayer2) &&
+                     (symbol2 == eSymbol.Player2 || symbol2 == eSymbol.KingPlayer2))
+            {
+                isSameSymbol = true;
+            }
+
+            return isSameSymbol;
+        }
+
+        private Player GetOpponentPlayer()
+        {
+            return (m_CurrentPlayer == m_Player1) ? m_Player2 : m_Player1;
+        }
+
+
+
+        public int CalculatePointsDifference()
+        {
+            int player1Points = 0;
+            int player2Points = 0;
+
+            foreach (Coin coin in m_GameBoard.GetBoard())
+            {
+                if (coin != null)
+                {
+                    if (IsSamePlayerSymbol(coin.m_Symbol, m_Player1.Symbol))
+                    {
+                        player1Points += (coin.IsKing() ? 4 : 1);
+                    }
+                    else if (IsSamePlayerSymbol(coin.m_Symbol, m_Player2.Symbol))
+                    {
+                        player2Points += (coin.IsKing() ? 4 : 1);
+                    }
+                }
+            }
+
+            return Math.Abs(player1Points - player2Points);
+        }
+
+        public Move CalculateComputerMove()
+        {
+            Move selectedMove = new Move();
+            bool isCaptureMoveAvailable = false;
+            int randomIndex = 0;
+
+            UpdatePossibleMoves();
+
+            foreach (Move possibleMove in m_PossibleMoves)
+            {
+                if (possibleMove.CheckIfTheMoveWasCaptureMove())
+                {
+                    selectedMove = possibleMove;
+                    isCaptureMoveAvailable = true;
+                    break;
+                }
+            }
+
+            if (!isCaptureMoveAvailable && m_PossibleMoves.Count > 0)
+            {
+                randomIndex = new Random().Next(m_PossibleMoves.Count);
+                selectedMove = m_PossibleMoves[randomIndex];
+            }
+
+            return selectedMove;
+        }
+
+
+
     }
 }

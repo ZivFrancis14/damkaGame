@@ -7,7 +7,7 @@ namespace Ex02
     //כאן מנוהל הממשק הטקסטואלי מול המשתמש
     public class ConsoleGame
     {
-        GameManager gameManager = null;
+        GameManager m_DamkaGame = null;
         
         public void StartGame()
         {
@@ -27,31 +27,42 @@ namespace Ex02
                 namePlayer2 = nameInputFromUser();
                 isPlayAgainstHuman = true;
             }
+            else
+            {
+                isPlayAgainstHuman = false;
+                namePlayer2 = "Computer";
+            }
 
-            Console.WriteLine("{0}", namePlayer1);
-            GameManager damkaGame = new GameManager(namePlayer1, namePlayer2, isPlayAgainstHuman, sizeBoard);
+            //Console.WriteLine("{0}", namePlayer1);
+            m_DamkaGame = new GameManager(namePlayer1, namePlayer2, isPlayAgainstHuman);
 
             while (gameState != eGameState.Exit) //!Q - The main loop of the whole game doesnt stop
             {
-                damkaGame.CreateNewSession();
+                m_DamkaGame.CreateNewSession(sizeBoard);
                 isFirstRound = true;
 
                 while (gameState == eGameState.Next)//single game run - as long there is't winners/equal/retirement
                 {                   
-                    printBoard(damkaGame.Session);
-                    printTheLastMoveTaken(isFirstRound, damkaGame.Session);
-                    printPlayerTurn(damkaGame.Session.GetCurrentPlayer());
-                    gameState = singlePlayTurn(damkaGame.Session, playerMove, sizeBoard);                  
+                    printBoard(m_DamkaGame.Session);
+                    printTheLastMoveTaken(isFirstRound, m_DamkaGame.Session);
+                    printPlayerTurn(m_DamkaGame.Session.GetCurrentPlayer());
+                    gameState = singlePlayTurn(m_DamkaGame.Session, playerMove, sizeBoard);                  
                     isFirstRound = false;
                     //Screen.Clear();
                 }
 
+                m_DamkaGame.UpdateWinnersScore();
+                printGeneralGameSummery();
+
                 if (isUserWantAnotherRound() == false)
                 {
                     gameState = eGameState.Exit;
-                }               
-            }
-            printGeneralGameSummery();
+                } 
+                else
+                {
+                    gameState = eGameState.Next;
+                }
+            }           
         }
         private string nameInputFromUser()
         {
@@ -77,6 +88,7 @@ namespace Ex02
                     inputIsValid = true;
                 }
             }
+
             return userName;
         }
         private int getSizeBoardFromUser()
@@ -152,7 +164,7 @@ namespace Ex02
             int LowerCaseMaxSizeOfBoard = k_LowerCaseA + i_SizeBoard;
             const int k_UpperCaseA = (int)'A'; // 65
             int UpperCaseMaxSizeOfBoard = k_UpperCaseA + i_SizeBoard;
-
+          
             if (i_InputFromUser.Length == 5)
             {
                 for (int i = 0; i < i_InputFromUser.Length; i+=3)
@@ -161,7 +173,7 @@ namespace Ex02
                         i_InputFromUser[i+1] >= k_LowerCaseA && i_InputFromUser[i+1] <= LowerCaseMaxSizeOfBoard)
                     {
                         isValid = true;
-                    }
+                    }                  
                     else
                     {
                         isValid = false;
@@ -169,7 +181,10 @@ namespace Ex02
                     }
                 }
             }
-            //else if(i_InputFromUser == eGameState.Exit))
+            else if(i_InputFromUser == ((char)eGameState.Exit).ToString())
+            {
+                isValid = true;
+            }
             else
             {
                 isValid = false;
@@ -177,25 +192,41 @@ namespace Ex02
 
             return isValid;
         }
-        private Move stepTurnInput(int i_sizeBoard)
+        private Move stepTurnInput(int i_sizeBoard, GameSession i_Session, out bool i_isExitGame)
         {
             bool inputIsValid = false;
             string inputFromUser = string.Empty;
             Move playerMove = new Move();
+            i_isExitGame = false;
 
-            while (inputIsValid == false)
+            if (i_Session.GetCurrentPlayer().IsHuman == false)
             {
-                Console.WriteLine("Please enter move step: ROWcol>ROWcol");
-                inputFromUser = Console.ReadLine();
+                playerMove = i_Session.CalculateComputerMove();
+            }
+            else
+            {
+                while (inputIsValid == false)
+                {
+                    Console.WriteLine("Please enter move step: ROWcol>ROWcol");
+                    inputFromUser = Console.ReadLine();
 
-                if (checkIfInputIsValid(inputFromUser, i_sizeBoard) == true)
-                {
-                    playerMove = setPlayerMove(inputFromUser);
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("Wrong Input. Please choose again");
+                    if (checkIfInputIsValid(inputFromUser, i_sizeBoard) == true)
+                    {
+                        if (inputFromUser == ((char)eGameState.Exit).ToString())
+                        {
+                            i_isExitGame = true;
+                            break;
+                        }
+                        else
+                        {
+                            playerMove = setPlayerMove(inputFromUser);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Wrong Input. Please choose again");
+                    }
                 }
             }
 
@@ -221,32 +252,44 @@ namespace Ex02
         private eGameState singlePlayTurn(GameSession i_Session, Move i_PlayerMove, int i_BoardSIze)
         {
             bool isMoveValid = false;
+            bool isExitGame = false;
+            eGameState currentStateAfterMove;
 
-            while(isMoveValid == false)
+            while (isMoveValid == false)
             {
-                i_PlayerMove = stepTurnInput(i_BoardSIze);
-                i_Session.Turn(i_PlayerMove, out isMoveValid);
+                i_PlayerMove = stepTurnInput(i_BoardSIze, i_Session, out isExitGame);
+                if (isExitGame == false)
+                {
+                    i_Session.Turn(i_PlayerMove, out isMoveValid);
+                }
             }
 
-            eGameState currentStateAfterMove = i_Session.GameStatus();
-
-            switch (currentStateAfterMove)
+            if (isExitGame == true)
             {
-                case eGameState.AnotherTurn:
-                    currentStateAfterMove = playerGetAnotherTurn(i_Session.GetCurrentPlayer().Name);
-                    break;
-                case eGameState.Win:
-                    thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
-                    break;
-                case eGameState.Lose:
-                    thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
-                    break;
-                case eGameState.Draw:
-                    thisSessionEndWithDraw();
-                    break;
-                default:
-                    break;
-            }   
+                 currentStateAfterMove = eGameState.Exit;
+            }
+            else
+            {
+                currentStateAfterMove = i_Session.GameStatus();
+
+                switch (currentStateAfterMove)
+                {
+                    case eGameState.AnotherTurn:
+                        currentStateAfterMove = playerGetAnotherTurn(i_Session.GetCurrentPlayer().Name);
+                        break;
+                    case eGameState.Win:
+                        thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
+                        break;
+                    case eGameState.Lose:
+                        thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
+                        break;
+                    case eGameState.Draw:
+                        thisSessionEndWithDraw();
+                        break;
+                    default:
+                        break;
+                }
+            }
             
             return currentStateAfterMove;
         }
@@ -255,12 +298,9 @@ namespace Ex02
             Console.WriteLine("{0} has another turn", i_PlayerName);
             return eGameState.Next;
         }
-        private void thereIsAWinnerInThisSession(string i_UserName)
+        private void thereIsAWinnerInThisSession(string i_UserName) // call the function for the ניקוד
         {
             Console.WriteLine("{0} is the winner for this session!", i_UserName);
-        }
-        private void thereIsALoserInThisSession()
-        {
 
         }
         private void thisSessionEndWithDraw()
@@ -304,34 +344,27 @@ namespace Ex02
 
             return returnValue;
         }
-        private void finishGeneralGame()
-        {
-
-        }
         private void printBoard(GameSession i_Session)
-        {
+        {           
             Coin[,] gameBoard = i_Session.GetGameBoardMatrix();
             int boardSize = gameBoard.GetLength(0);
 
-            // הדפסת כותרת עם אותיות העמודות מה-Enum eCol
             Console.Write("    ");
             foreach (eCol col in Enum.GetValues(typeof(eCol)))
             {
-                if ((int)col < boardSize) // מתחשב בגודל הלוח
+                if ((int)col < boardSize)
                 {
                     Console.Write("{0}     ", col);
                 }
             }
             Console.WriteLine();
 
-            // הדפסת שורת "=" מתחת לאותיות העמודות
             Console.WriteLine("  " + new string('=', boardSize * 6));
 
             foreach (eRow row in Enum.GetValues(typeof(eRow)))
             {
-                if ((int)row < boardSize) // מתחשב בגודל הלוח
+                if ((int)row < boardSize)
                 {
-                    // הדפסת אותיות השורות
                     Console.Write("{0}|  ", row);
 
                     for (int col = 0; col < boardSize; col++)
@@ -350,7 +383,6 @@ namespace Ex02
 
                     Console.WriteLine();
 
-                    // הדפסת קו מפריד בין השורות (למעט אחרי השורה האחרונה)
                     if ((int)row < boardSize - 1)
                     {
                         Console.WriteLine("  " + new string('=', boardSize * 6));
@@ -358,13 +390,23 @@ namespace Ex02
                 }
             }
 
-            // הוספת שורת "=" בסוף הלוח
             Console.WriteLine("  " + new string('=', boardSize * 6));
         }
         private void printPlayerTurn(Player i_Player)
         {
-            string msg = string.Format("{0}'s Turn ({1}) :", i_Player.Name, (char)i_Player.Symbol);
-            Console.WriteLine(msg);
+            string msg = string.Empty;
+
+            if (i_Player.IsHuman == false)
+            {
+                msg = string.Format("Computer’s Turn (press ‘enter’ to see its move)");
+                Console.WriteLine(msg);
+                Console.ReadLine();
+            }
+            else
+            {
+                msg = string.Format("{0}'s Turn ({1}) :", i_Player.Name, (char)i_Player.Symbol);
+                Console.WriteLine(msg);
+            }
         }
         private void printTheLastMoveTaken(bool i_IsFirstRound, GameSession i_Session)
         {
@@ -398,17 +440,17 @@ namespace Ex02
                 return currentPlayer == player1 ? player2 : player1;
             }
         }
-
         private void printGeneralGameSummery()
         {
+            string msg = string.Empty;
 
+            msg = string.Format("Current points status:");
+            msg = string.Format("Player 1:  {0}\nPlayer 2:  {1}", m_DamkaGame.GetPlayerScore(m_DamkaGame.Player1), m_DamkaGame.GetPlayerScore(m_DamkaGame.Player2));
+            Console.WriteLine(msg);
+        }
+        private Move getComputerMove(GameSession i_Session)
+        {
+            return i_Session.CurrentMove;
         }
     }
 }
-
-
-
-
-
-
-

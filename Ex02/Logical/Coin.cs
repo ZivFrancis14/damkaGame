@@ -39,6 +39,23 @@ namespace Ex02
         {
             m_IsKing = true;
         }
+
+        public static bool IsSamePlayerSymbol(eSymbol symbol1, eSymbol symbol2)
+        {
+            bool SamePlayer = false;
+            if ((symbol1 == eSymbol.Player1 || symbol1 == eSymbol.KingPlayer1) &&
+                (symbol2 == eSymbol.Player1 || symbol2 == eSymbol.KingPlayer1))
+            {
+                SamePlayer = true;
+            }
+            if ((symbol1 == eSymbol.Player2 || symbol1 == eSymbol.KingPlayer2) &&
+                (symbol2 == eSymbol.Player2 || symbol2 == eSymbol.KingPlayer2))
+            {
+                SamePlayer = true;
+            }
+            return SamePlayer;
+        }
+
     }
 }
 

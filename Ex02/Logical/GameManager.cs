@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 
 namespace Ex02
@@ -12,11 +13,16 @@ namespace Ex02
         private Player m_Player2 = null;
         private GameBoard m_Board = null;
         private GameSession m_Session = null;
-        public GameManager(string i_NamePlayer1, string i_NamePlayer2, bool i_IsPlayer2Human, int i_sizeBoard)
+        private Dictionary<Player, int> m_TotalScore;
+
+        public GameManager(string i_NamePlayer1, string i_NamePlayer2, bool i_IsPlayer2Human)
         {
             m_Player1 = new Player(i_NamePlayer1, true, eSymbol.Player1);
             m_Player2 = new Player(i_NamePlayer2, i_IsPlayer2Human, eSymbol.Player2);
-            m_Board = new GameBoard(i_sizeBoard);
+            m_TotalScore = new Dictionary<Player, int>()
+            {
+                {m_Player1, 0}, {m_Player2, 0}
+            };
         }
 
         public GameSession Session
@@ -30,13 +36,42 @@ namespace Ex02
                 m_Session = value;
             }
         }
-  
-        public void CreateNewSession()
+        public Player Player1
         {
+            get
+            {
+                return m_Player1;
+            }
+        }
+        public Player Player2
+        {
+            get
+            {
+                return m_Player2;
+            }
+        }
+
+        public void CreateNewSession(int i_sizeBoard)
+        {
+            m_Board = new GameBoard(i_sizeBoard);
             m_Session = new GameSession(m_Player1, m_Player2, m_Board);
         }
      
-
+        public void UpdateWinnersScore()
+        {
+            m_TotalScore[m_Session.GetCurrentPlayer()] += m_Session.CalculatePointsDifference();
+        }
+        public int GetPlayerScore(Player player)
+        {
+            if (m_TotalScore.TryGetValue(player, out int score))
+            {
+                return score;
+            }
+            else
+            {
+                return 0;
+            }
+        }
         
     }
 }
