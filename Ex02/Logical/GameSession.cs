@@ -38,11 +38,6 @@ namespace Ex02
             o_IsMoveValid = false;
             bool moveIsCapture = false;
 
-            //if (m_CurrentPlayer.IsHuman == false)
-            //{                
-            //    i_UsersMove = CalculateComputerMove();
-            //}
-
             if (m_TheCurrentCoinForDoubleJump != null)
             {
                 if (ValidateDoubleTurn(i_UsersMove))

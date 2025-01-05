@@ -4,7 +4,6 @@ using Ex02.ConsoleUtils;
 
 namespace Ex02
 {
-    //כאן מנוהל הממשק הטקסטואלי מול המשתמש
     public class ConsoleGame
     {
         GameManager m_DamkaGame = null;
@@ -32,27 +31,26 @@ namespace Ex02
                 isPlayAgainstHuman = false;
                 namePlayer2 = "Computer";
             }
-
-            //Console.WriteLine("{0}", namePlayer1);
+    
             m_DamkaGame = new GameManager(namePlayer1, namePlayer2, isPlayAgainstHuman);
 
-            while (gameState != eGameState.Exit) //!Q - The main loop of the whole game doesnt stop
+            while (gameState != eGameState.Exit)
             {
                 m_DamkaGame.CreateNewSession(sizeBoard);
                 isFirstRound = true;
 
-                while (gameState == eGameState.Next)//single game run - as long there is't winners/equal/retirement
+                while (gameState == eGameState.Next)
                 {                   
                     printBoard(m_DamkaGame.Session);
                     printTheLastMoveTaken(isFirstRound, m_DamkaGame.Session);
                     printPlayerTurn(m_DamkaGame.Session.GetCurrentPlayer());
                     gameState = singlePlayTurn(m_DamkaGame.Session, playerMove, sizeBoard);                  
                     isFirstRound = false;
-                    //Screen.Clear();
+                    Screen.Clear();
                 }
 
                 m_DamkaGame.UpdateWinnersScore();
-                printGeneralGameSummery();
+                printGeneralGameScore();
 
                 if (isUserWantAnotherRound() == false)
                 {
@@ -69,19 +67,33 @@ namespace Ex02
             string userName = string.Empty;
             const int k_MaxLength = 20;
             bool inputIsValid = false;
+            string msg = string.Empty;
 
             while (inputIsValid == false)
             {
-                Console.WriteLine("Please type player name (maximum {0} characters):", k_MaxLength);
-                userName = Console.ReadLine()?.Trim();
+                msg = string.Format("Please type player name (maximum {0} characters):", k_MaxLength);
+                Console.WriteLine(msg);
+                userName = Console.ReadLine();
 
-                if(string.IsNullOrEmpty(userName))
+                if(string.IsNullOrEmpty(userName) == true)
                 {
-                    Console.WriteLine("Name cannot be empty. Please try again.");
+                    msg = string.Format("Name cannot be empty. Please try again.");
+                    Console.WriteLine();
+                }
+                else if (userName.Contains(' '))
+                {
+                    msg = string.Format("Name cannot contain spaces. Please try again.");
+                    Console.WriteLine(msg);
                 }
                 else if (userName.Length > k_MaxLength)
                 {
-                    Console.WriteLine("Name is too long. Please use up to {0} characters.", k_MaxLength);
+                    msg = string.Format("Name is too long. Please use up to {0} characters.", k_MaxLength);
+                    Console.WriteLine(msg);
+                }
+                else if (userName.Any(char.IsDigit) == true)
+                {
+                    msg = string.Format("Name cannot contain numbers. Please try again.");
+                    Console.WriteLine(msg);
                 }
                 else
                 {
@@ -97,10 +109,13 @@ namespace Ex02
             int[] optionSizeBoard = { 6, 8, 10 };
             int sizeBoard = 0;
             bool inputIsValid = false;
+            string msg = string.Empty;
 
             while (inputIsValid == false)
             {
-                Console.Write("Please enter game size board: ");
+                msg = "Please enter game size board: ";
+                Console.Write(msg);
+
                 for (int i = 0; i < optionSizeBoard.Length; i++)
                 {
                     Console.Write(optionSizeBoard[i]);
@@ -109,7 +124,7 @@ namespace Ex02
                         Console.Write(" / ");
                     }
                 }
-                Console.WriteLine(" ");
+                Console.WriteLine();
                 userInput = Console.ReadLine();
 
                 if(int.TryParse(userInput, out sizeBoard) && optionSizeBoard.Contains(sizeBoard))
@@ -118,7 +133,8 @@ namespace Ex02
                 }
                 else
                 {
-                    Console.WriteLine("Wrong Input. Please choose again");
+                    msg = string.Format("Wrong Input. Please choose again");
+                    Console.WriteLine(msg);
                 }
             }
 
@@ -130,10 +146,12 @@ namespace Ex02
             int userChoose = 0;
             bool isHuman = false;
             bool inputIsValid = false;
+            string msg = string.Empty;
 
             while (inputIsValid == false)
             {
-                Console.WriteLine("Please press (1) or (2):\n(1)   Player vs Player\n(2)   Player vs Computer");
+                msg = string.Format("Please press (1) or (2):\n(1)   Player vs Player\n(2)   Player vs Computer");
+                Console.WriteLine(msg);
                 userInput = Console.ReadLine();
 
                 if (int.TryParse(userInput, out userChoose) && (userChoose == 1 || userChoose == 2))
@@ -151,7 +169,8 @@ namespace Ex02
                 }
                 else
                 {
-                    Console.WriteLine("Wrong Input. Please choose again");
+                    msg = string.Format("Wrong Input. Please choose again");
+                    Console.WriteLine(msg);
                 }
             }
 
@@ -198,6 +217,7 @@ namespace Ex02
             string inputFromUser = string.Empty;
             Move playerMove = new Move();
             i_isExitGame = false;
+            string msg = string.Empty;
 
             if (i_Session.GetCurrentPlayer().IsHuman == false)
             {
@@ -207,7 +227,8 @@ namespace Ex02
             {
                 while (inputIsValid == false)
                 {
-                    Console.WriteLine("Please enter move step: ROWcol>ROWcol");
+                    msg = string.Format("Please enter move step: ROWcol>ROWcol");
+                    Console.WriteLine(msg);
                     inputFromUser = Console.ReadLine();
 
                     if (checkIfInputIsValid(inputFromUser, i_sizeBoard) == true)
@@ -225,7 +246,8 @@ namespace Ex02
                     }
                     else
                     {
-                        Console.WriteLine("Wrong Input. Please choose again");
+                        msg = string.Format("Wrong Input. Please choose again");
+                        Console.WriteLine(msg);
                     }
                 }
             }
@@ -253,6 +275,7 @@ namespace Ex02
         {
             bool isMoveValid = false;
             bool isExitGame = false;
+            string msg = string.Empty;
             eGameState currentStateAfterMove;
 
             while (isMoveValid == false)
@@ -262,11 +285,16 @@ namespace Ex02
                 {
                     i_Session.Turn(i_PlayerMove, out isMoveValid);
                 }
+                else
+                {
+                    isMoveValid = true;
+                }
             }
 
             if (isExitGame == true)
             {
-                 currentStateAfterMove = eGameState.Exit;
+                currentStateAfterMove = eGameState.Exit;
+                thereIsAWinnerInThisSession(getWinnerPlayerName(i_Session));
             }
             else
             {
@@ -280,9 +308,6 @@ namespace Ex02
                     case eGameState.Win:
                         thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
                         break;
-                    case eGameState.Lose:
-                        thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
-                        break;
                     case eGameState.Draw:
                         thisSessionEndWithDraw();
                         break;
@@ -293,19 +318,32 @@ namespace Ex02
             
             return currentStateAfterMove;
         }
+        private string getWinnerPlayerName(GameSession i_Session)
+        {
+            return i_Session.GetCurrentPlayer().Symbol == eSymbol.Player1 ? i_Session.Player2.Name : i_Session.Player1.Name;
+        }
         private eGameState playerGetAnotherTurn(string i_PlayerName)
         {
-            Console.WriteLine("{0} has another turn", i_PlayerName);
+            string msg = string.Empty;
+
+            msg = string.Format("{0} has another turn", i_PlayerName);
+            Console.WriteLine(msg);
+
             return eGameState.Next;
         }
-        private void thereIsAWinnerInThisSession(string i_UserName) // call the function for the ניקוד
-        {
-            Console.WriteLine("{0} is the winner for this session!", i_UserName);
+        private void thereIsAWinnerInThisSession(string i_UserName)
+        { 
+            string msg = string.Empty;
 
+            msg = string.Format("{0} is the winner for this session!", i_UserName);
+            Console.WriteLine(msg);
         }
         private void thisSessionEndWithDraw()
         {
-            Console.WriteLine("The session ended in a draw");
+            string msg = string.Empty;
+
+            msg = string.Format("The session ended in a draw");
+            Console.WriteLine(msg);
         }
         private bool isUserWantAnotherRound()
         {
@@ -313,10 +351,12 @@ namespace Ex02
             int userChoose = 0;
             bool returnValue = false;
             bool inputIsValid = false;
+            string msg = string.Empty;
 
             while (inputIsValid == false)
             {
-                Console.WriteLine("Would you like to play again?\nchoose:\n(1)  Yes\n(2)  No");
+                msg = string.Format("Would you like to play again?\nchoose:\n(1)  Yes\n(2)  No");
+                Console.WriteLine(msg);
                 userInput = Console.ReadLine();
 
                 if (int.TryParse(userInput, out userChoose))
@@ -333,12 +373,14 @@ namespace Ex02
                     }
                     else
                     {
-                        Console.WriteLine("Invalid input. Please choose again");
+                        msg = string.Format("Invalid input. Please choose again");
+                        Console.WriteLine(msg);
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Invalid input. Please choose again");
+                    msg = string.Format("Invalid input. Please choose again");
+                    Console.WriteLine(msg);
                 }
             }
 
@@ -440,12 +482,12 @@ namespace Ex02
                 return currentPlayer == player1 ? player2 : player1;
             }
         }
-        private void printGeneralGameSummery()
+        private void printGeneralGameScore()
         {
             string msg = string.Empty;
 
             msg = string.Format("Current points status:");
-            msg = string.Format("Player 1:  {0}\nPlayer 2:  {1}", m_DamkaGame.GetPlayerScore(m_DamkaGame.Player1), m_DamkaGame.GetPlayerScore(m_DamkaGame.Player2));
+            msg = string.Format("{0}:  {1}\n{2}:  {3}",m_DamkaGame.Player1.Name, m_DamkaGame.GetPlayerScore(m_DamkaGame.Player1), m_DamkaGame.Player2.Name, m_DamkaGame.GetPlayerScore(m_DamkaGame.Player2));
             Console.WriteLine(msg);
         }
         private Move getComputerMove(GameSession i_Session)

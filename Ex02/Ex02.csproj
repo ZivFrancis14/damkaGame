@@ -37,7 +37,7 @@
   <ItemGroup>
     <Compile Include="UI\ConsoleGame.cs" />
     <Compile Include="Enums\eBoardStyle.cs" />
-    <Compile Include="Enums\eLogic.cs" />
+    <Compile Include="Enums\eGameState.cs" />
     <Compile Include="Logical\GameSession.cs" />
     <Compile Include="Logical\GameManager.cs" />
     <Compile Include="Logical\GameBoard.cs" />
