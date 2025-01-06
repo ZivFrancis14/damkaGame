@@ -10,9 +10,9 @@
     }
     public enum eSymbol
     {
-        Player1 = 'O',//O
-        Player2 = 'X',//X
-        KingPlayer1 = 'U',//U
-        KingPlayer2 = 'K',//K
+        Player1 = 'O',
+        Player2 = 'X',
+        KingPlayer1 = 'U',
+        KingPlayer2 = 'K',
     }
 }

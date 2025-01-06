@@ -2,30 +2,28 @@
 {
     public struct Move
     {
-        private PointOnBoard m_Start;
-        private PointOnBoard m_End;
+        private readonly PointOnBoard r_Start;
+        private readonly PointOnBoard r_End;
         private bool m_IsCapture;
 
         public Move(PointOnBoard start, PointOnBoard end, bool isCapture = false)
         {
-            m_Start = start;
-            m_End = end;
+            r_Start = start;
+            r_End = end;
             m_IsCapture = isCapture;
         }
-
         public PointOnBoard Start
         {
             get
             { 
-                return m_Start; 
+                return r_Start; 
             }
         }
-
         public PointOnBoard End
         {
             get 
             { 
-                return m_End; 
+                return r_End; 
             }
         }
         public bool IsCapture
@@ -35,7 +33,6 @@
                 m_IsCapture = value;
             }
         }
-
         public bool CheckIfTheMoveWasCaptureMove()
         {
             return m_IsCapture;

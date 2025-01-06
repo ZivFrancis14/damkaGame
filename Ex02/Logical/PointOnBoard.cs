@@ -5,12 +5,11 @@
         private eRow m_Row;
         private eCol m_Col;
 
-        public PointOnBoard(eRow row, eCol col)
+        public PointOnBoard(eRow i_Row, eCol i_Col)
         {
-            m_Row = row;
-            m_Col = col;
+            m_Row = i_Row;
+            m_Col = i_Col;
         }
-
         public eRow Row
         {
             get 
@@ -22,7 +21,6 @@
                 m_Row = value; 
             }
         }
-
         public eCol Col
         {
             get 

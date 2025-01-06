@@ -1,61 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Ex02
+﻿namespace Ex02
 {
     public class Coin
     {
         private int m_Row = -1;
+        private int m_Col =-1;
         public eSymbol m_Symbol = eSymbol.Player1;
         private bool m_IsKing = false;
-        public int Row { get; set; }
-        public int Col { get; set; }
+
         public Coin(eSymbol i_Symbol, int i_Row, int i_Col)
         {
             m_Symbol = i_Symbol;
             Row = i_Row;
             Col = i_Col;
         }
-        public char GetSymbol()
+        public int Row
         {
-            return (char)m_Symbol;
+            get
+            {
+                return m_Row;
+            }
+            set
+            {
+                m_Row = value;
+            }
         }
-        public void SetSymbol(eSymbol i_Symbol)
+        public int Col
+        {
+            get
+            {
+                return m_Col;
+            }
+            set
+            {
+                m_Col = value;
+            }
+        }
+        public char Symbol
+        {
+            get
+            {
+                return (char)m_Symbol;
+            }
+        }
+        public bool IsKing
+        {
+            get
+            {
+                return m_IsKing;
+            }
+            set
+            {
+                m_IsKing = value;
+            }
+        }
+        public void SetSymbolByPlayerType(eSymbol i_Symbol)
         {
             m_Symbol = i_Symbol;
         }
-        public bool IsKing()
-        {
-            return m_IsKing;
-        }
-        public void MoveTo(int i_NewRow, int i_NewCol)
-        {
-            Row = i_NewRow;
-            Col = i_NewCol;
-        }
-        public void MakeKing()
-        {
-            m_IsKing = true;
-        }
-
-        public static bool IsSamePlayerSymbol(eSymbol symbol1, eSymbol symbol2)
-        {
-            bool SamePlayer = false;
-            if ((symbol1 == eSymbol.Player1 || symbol1 == eSymbol.KingPlayer1) &&
-                (symbol2 == eSymbol.Player1 || symbol2 == eSymbol.KingPlayer1))
-            {
-                SamePlayer = true;
-            }
-            if ((symbol1 == eSymbol.Player2 || symbol1 == eSymbol.KingPlayer2) &&
-                (symbol2 == eSymbol.Player2 || symbol2 == eSymbol.KingPlayer2))
-            {
-                SamePlayer = true;
-            }
-            return SamePlayer;
-        }
-
     }
 }
 

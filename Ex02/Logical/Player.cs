@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ex02
+﻿namespace Ex02
 {
     public class Player
     {
@@ -17,7 +13,6 @@ namespace Ex02
             r_IsHuman = i_IsHuman;
             r_Symbol = i_Symbol;
         }
-
         public string Name
         {
             get 
@@ -25,34 +20,31 @@ namespace Ex02
                 return r_Name; 
             }
         }
-
         public bool IsHuman
         {
             get 
             { 
                 return r_IsHuman; 
             }
-        }
-        
+        }  
         public eSymbol Symbol
         {
             get { return r_Symbol;}
         }
-
         public int CurrentNumberOfCoins
         {
-            get { return m_CurrentNumberOfCoins; }
+            get
+            {
+                return m_CurrentNumberOfCoins;
+            }
         }
-
         public void AddCoin(Coin i_Coin)
         {
             m_CurrentNumberOfCoins++;
         }
-
         public void RemoveCoin(Coin i_Coin)
         {
             m_CurrentNumberOfCoins--;  
         }
-
     }
 }

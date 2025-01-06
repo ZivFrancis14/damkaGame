@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Policy;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Ex02
 {
-    //כאן מנוהלת הלוגיקה של המשחק הכללי 
     public class GameManager
     {
         private Player m_Player1 = null;
@@ -17,14 +12,15 @@ namespace Ex02
 
         public GameManager(string i_NamePlayer1, string i_NamePlayer2, bool i_IsPlayer2Human)
         {
-            m_Player1 = new Player(i_NamePlayer1, true, eSymbol.Player1);
+            bool v_SetPlayerAsHuman = true;
+            
+            m_Player1 = new Player(i_NamePlayer1, v_SetPlayerAsHuman, eSymbol.Player1);
             m_Player2 = new Player(i_NamePlayer2, i_IsPlayer2Human, eSymbol.Player2);
             m_TotalScore = new Dictionary<Player, int>()
             {
                 {m_Player1, 0}, {m_Player2, 0}
             };
         }
-
         public GameSession Session
         {
             get
@@ -50,16 +46,14 @@ namespace Ex02
                 return m_Player2;
             }
         }
-
         public void CreateNewSession(int i_sizeBoard)
         {
             m_Board = new GameBoard(i_sizeBoard);
             m_Session = new GameSession(m_Player1, m_Player2, m_Board);
-        }
-     
+        }     
         public void UpdateWinnersScore()
         {
-            m_TotalScore[m_Session.GetCurrentPlayer()] += m_Session.CalculatePointsDifference();
+            m_TotalScore[m_Session.CurrentPlayer] += m_Session.CalculatePointsDifference();
         }
         public int GetPlayerScore(Player player)
         {
@@ -71,7 +65,6 @@ namespace Ex02
             {
                 return 0;
             }
-        }
-        
+        }       
     }
 }

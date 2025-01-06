@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ex02
+﻿namespace Ex02
 {
     internal class Program
     {
@@ -8,7 +6,6 @@ namespace Ex02
         {
             playDamkaGame();
         }
-
         private static void playDamkaGame()
         {
             ConsoleGame damkaGame = new ConsoleGame();

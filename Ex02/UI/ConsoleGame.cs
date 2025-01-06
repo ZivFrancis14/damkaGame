@@ -7,60 +7,73 @@ namespace Ex02
     public class ConsoleGame
     {
         GameManager m_DamkaGame = null;
-        
+
         public void StartGame()
         {
-            string namePlayer1 = string.Empty;
-            string namePlayer2 = string.Empty;
-            int sizeBoard = 0;
-            bool isPlayAgainstHuman = false;
-            eGameState gameState = eGameState.Next;
-            bool isFirstRound = true;
+            initializePlayers(out string o_NamePlayer1, out string o_NamePlayer2, out int o_SizeBoard, out bool o_IsPlayAgainstHuman);
+            runGameLoop(o_NamePlayer1, o_NamePlayer2, o_SizeBoard, o_IsPlayAgainstHuman);
+        }
+        private void initializePlayers(out string o_NamePlayer1, out string o_NamePlayer2, out int o_SizeBoard, out bool o_IsPlayAgainstHuman)
+        {
+            string msg = string.Empty;
 
-            Move playerMove = new Move();
-            namePlayer1 = nameInputFromUser();
-            sizeBoard = getSizeBoardFromUser();
-            if (playAgainstHuman() == true)
+            o_NamePlayer1 = nameInputFromUser();
+            o_SizeBoard = getSizeBoardFromUser();
+            o_IsPlayAgainstHuman = playAgainstHuman();
+
+            if (o_IsPlayAgainstHuman)
             {
-                Console.WriteLine("For another player:");
-                namePlayer2 = nameInputFromUser();
-                isPlayAgainstHuman = true;
+                msg = string.Format("For another player:");
+                Console.WriteLine(msg);
+                o_NamePlayer2 = nameInputFromUser();
             }
             else
             {
-                isPlayAgainstHuman = false;
-                namePlayer2 = "Computer";
+                o_NamePlayer2 = "Computer";
             }
-    
-            m_DamkaGame = new GameManager(namePlayer1, namePlayer2, isPlayAgainstHuman);
+        }
+        private void runGameLoop(string i_NamePlayer1, string i_NamePlayer2, int i_SizeBoard, bool i_IsPlayAgainstHuman)
+        {
+            m_DamkaGame = new GameManager(i_NamePlayer1, i_NamePlayer2, i_IsPlayAgainstHuman);
+            eGameState gameState = eGameState.Next;
 
             while (gameState != eGameState.Exit)
             {
-                m_DamkaGame.CreateNewSession(sizeBoard);
-                isFirstRound = true;
-
-                while (gameState == eGameState.Next)
-                {                   
-                    printBoard(m_DamkaGame.Session);
-                    printTheLastMoveTaken(isFirstRound, m_DamkaGame.Session);
-                    printPlayerTurn(m_DamkaGame.Session.GetCurrentPlayer());
-                    gameState = singlePlayTurn(m_DamkaGame.Session, playerMove, sizeBoard);                  
-                    isFirstRound = false;
-                    Screen.Clear();
-                }
-
+                startNewSession(i_SizeBoard);
+                gameState = playRounds(i_SizeBoard);
                 m_DamkaGame.UpdateWinnersScore();
                 printGeneralGameScore();
-
                 if (isUserWantAnotherRound() == false)
                 {
                     gameState = eGameState.Exit;
-                } 
+                }
                 else
                 {
                     gameState = eGameState.Next;
                 }
-            }           
+            }
+        }
+        private void startNewSession(int i_SizeBoard)
+        {
+            m_DamkaGame.CreateNewSession(i_SizeBoard);
+        }
+        private eGameState playRounds(int i_SizeBoard)
+        {
+            bool isFirstRound = true;
+            eGameState gameState = eGameState.Next;
+            Move playerMove = new Move();
+
+            while (gameState == eGameState.Next)
+            {
+                Screen.Clear();
+                printBoard(m_DamkaGame.Session);
+                printTheLastMoveTaken(isFirstRound, m_DamkaGame.Session);
+                printPlayerTurn(m_DamkaGame.Session.CurrentPlayer);
+                gameState = singlePlayTurn(m_DamkaGame.Session, playerMove, i_SizeBoard);
+                isFirstRound = false;
+            }
+
+            return gameState;
         }
         private string nameInputFromUser()
         {
@@ -74,7 +87,6 @@ namespace Ex02
                 msg = string.Format("Please type player name (maximum {0} characters):", k_MaxLength);
                 Console.WriteLine(msg);
                 userName = Console.ReadLine();
-
                 if(string.IsNullOrEmpty(userName) == true)
                 {
                     msg = string.Format("Name cannot be empty. Please try again.");
@@ -115,7 +127,6 @@ namespace Ex02
             {
                 msg = "Please enter game size board: ";
                 Console.Write(msg);
-
                 for (int i = 0; i < optionSizeBoard.Length; i++)
                 {
                     Console.Write(optionSizeBoard[i]);
@@ -126,7 +137,6 @@ namespace Ex02
                 }
                 Console.WriteLine();
                 userInput = Console.ReadLine();
-
                 if(int.TryParse(userInput, out sizeBoard) && optionSizeBoard.Contains(sizeBoard))
                 {
                     inputIsValid = true;
@@ -153,7 +163,6 @@ namespace Ex02
                 msg = string.Format("Please press (1) or (2):\n(1)   Player vs Player\n(2)   Player vs Computer");
                 Console.WriteLine(msg);
                 userInput = Console.ReadLine();
-
                 if (int.TryParse(userInput, out userChoose) && (userChoose == 1 || userChoose == 2))
                 {
                     if (userChoose == 1)
@@ -179,9 +188,9 @@ namespace Ex02
         private bool checkIfInputIsValid(string i_InputFromUser, int i_SizeBoard)
         {
             bool isValid = false;
-            const int k_LowerCaseA = (int)'a'; // 97
+            const int k_LowerCaseA = (int)'a';
             int LowerCaseMaxSizeOfBoard = k_LowerCaseA + i_SizeBoard;
-            const int k_UpperCaseA = (int)'A'; // 65
+            const int k_UpperCaseA = (int)'A';
             int UpperCaseMaxSizeOfBoard = k_UpperCaseA + i_SizeBoard;
           
             if (i_InputFromUser.Length == 5)
@@ -211,15 +220,15 @@ namespace Ex02
 
             return isValid;
         }
-        private Move stepTurnInput(int i_sizeBoard, GameSession i_Session, out bool i_isExitGame)
+        private Move stepTurnInput(int i_sizeBoard, GameSession i_Session, out bool o_isExitGame)
         {
             bool inputIsValid = false;
             string inputFromUser = string.Empty;
             Move playerMove = new Move();
-            i_isExitGame = false;
+            o_isExitGame = false;
             string msg = string.Empty;
 
-            if (i_Session.GetCurrentPlayer().IsHuman == false)
+            if (i_Session.CurrentPlayer.IsHuman == false)
             {
                 playerMove = i_Session.CalculateComputerMove();
             }
@@ -235,7 +244,7 @@ namespace Ex02
                     {
                         if (inputFromUser == ((char)eGameState.Exit).ToString())
                         {
-                            i_isExitGame = true;
+                            o_isExitGame = true;
                             break;
                         }
                         else
@@ -256,9 +265,8 @@ namespace Ex02
         }
         private Move setPlayerMove(string i_InputFromUser)
         {
-            const int k_LowerCaseA = (int)'a'; // 97
-            const int k_UpperCaseA = (int)'A'; // 65
-            
+            const int k_LowerCaseA = (int)'a';
+            const int k_UpperCaseA = (int)'A';            
             PointOnBoard start = new PointOnBoard();
             PointOnBoard end = new PointOnBoard();
 
@@ -266,7 +274,6 @@ namespace Ex02
             start.Col = (eCol)((int)i_InputFromUser[1] - k_LowerCaseA);
             end.Row = (eRow)((int)i_InputFromUser[3] - k_UpperCaseA);
             end.Col = (eCol)((int)i_InputFromUser[4] - k_LowerCaseA);
-
             Move playerMove = new Move(start, end);
 
             return playerMove;
@@ -289,6 +296,12 @@ namespace Ex02
                 {
                     isMoveValid = true;
                 }
+
+                if (isMoveValid == false)
+                {
+                    msg = string.Format("This move invalid. Please try again");
+                    Console.WriteLine(msg);
+                }
             }
 
             if (isExitGame == true)
@@ -303,10 +316,10 @@ namespace Ex02
                 switch (currentStateAfterMove)
                 {
                     case eGameState.AnotherTurn:
-                        currentStateAfterMove = playerGetAnotherTurn(i_Session.GetCurrentPlayer().Name);
+                        currentStateAfterMove = playerGetAnotherTurn(i_Session.CurrentPlayer.Name);
                         break;
                     case eGameState.Win:
-                        thereIsAWinnerInThisSession(i_Session.GetCurrentPlayer().Name);
+                        thereIsAWinnerInThisSession(i_Session.CurrentPlayer.Name);
                         break;
                     case eGameState.Draw:
                         thisSessionEndWithDraw();
@@ -320,7 +333,7 @@ namespace Ex02
         }
         private string getWinnerPlayerName(GameSession i_Session)
         {
-            return i_Session.GetCurrentPlayer().Symbol == eSymbol.Player1 ? i_Session.Player2.Name : i_Session.Player1.Name;
+            return i_Session.CurrentPlayer.Symbol == eSymbol.Player1 ? i_Session.Player2.Name : i_Session.Player1.Name;
         }
         private eGameState playerGetAnotherTurn(string i_PlayerName)
         {
@@ -358,7 +371,6 @@ namespace Ex02
                 msg = string.Format("Would you like to play again?\nchoose:\n(1)  Yes\n(2)  No");
                 Console.WriteLine(msg);
                 userInput = Console.ReadLine();
-
                 if (int.TryParse(userInput, out userChoose))
                 {
                     if (userChoose == 1)
@@ -387,8 +399,8 @@ namespace Ex02
             return returnValue;
         }
         private void printBoard(GameSession i_Session)
-        {           
-            Coin[,] gameBoard = i_Session.GetGameBoardMatrix();
+        {
+            Coin[,] gameBoard = i_Session.GameBoardMatrix;
             int boardSize = gameBoard.GetLength(0);
 
             Console.Write("    ");
@@ -399,23 +411,20 @@ namespace Ex02
                     Console.Write("{0}     ", col);
                 }
             }
+
             Console.WriteLine();
-
             Console.WriteLine("  " + new string('=', boardSize * 6));
-
             foreach (eRow row in Enum.GetValues(typeof(eRow)))
             {
                 if ((int)row < boardSize)
                 {
                     Console.Write("{0}|  ", row);
-
                     for (int col = 0; col < boardSize; col++)
                     {
                         Coin coin = gameBoard[(int)row, col];
-
                         if (coin != null)
                         {
-                            Console.Write("{0}  |  ", coin.GetSymbol());
+                            Console.Write("{0}  |  ", coin.Symbol);
                         }
                         else
                         {
@@ -424,7 +433,6 @@ namespace Ex02
                     }
 
                     Console.WriteLine();
-
                     if ((int)row < boardSize - 1)
                     {
                         Console.WriteLine("  " + new string('=', boardSize * 6));
@@ -456,7 +464,6 @@ namespace Ex02
             {
                 Move lastMove = getLastMoveWasTaken(i_Session);
                 Player lastPlayer = getLastPlayer(i_Session);
-
                 string startPoint = string.Format("{0}{1}", lastMove.Start.Row, lastMove.Start.Col);
                 string endPoint = string.Format("{0}{1}", lastMove.End.Row, lastMove.End.Col);
                 string msg = string.Format("{0}'s move was ({1}) : {2}>{3}", lastPlayer.Name, (char)lastPlayer.Symbol, startPoint, endPoint);
@@ -471,11 +478,11 @@ namespace Ex02
         {
             if (i_Session.CurrentCoinForDoubleJump != null)
             {
-                return i_Session.GetCurrentPlayer();
+                return i_Session.CurrentPlayer;
             }
             else
             {
-                Player currentPlayer = i_Session.GetCurrentPlayer();
+                Player currentPlayer = i_Session.CurrentPlayer;
                 Player player1 = i_Session.Player1;
                 Player player2 = i_Session.Player2;
 
